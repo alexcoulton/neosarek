@@ -3,16 +3,18 @@ process vepanno {
     path vepcache
     path vepfasta
     path vepplugins
-    tuple val(patient), val(meta), path(merged_fastq_1), path(merged_fastq_2), path(variants_vcf)
+    tuple val(patient), val(tumour_samples), path(merged_vcf), path(merged_vcf_index)
+
+    publishDir "${params.outputdir}/${patient}/vep_annotated_merged_vcf/", mode: 'copy'
 
     output:
-    tuple val(patient), val("${meta['sample']}"), path("${patient}.${meta['sample']}.vep.vcf"), emit: vep_vcf
+    tuple val(patient), val(tumour_samples), path("${patient}.vep.vcf"), emit: vep_vcf
 
     script:
     """
     vep \
-        --input_file ${variants_vcf} \
-        --output_file ${patient}.${meta['sample']}.vep.vcf \
+        --input_file ${merged_vcf} \
+        --output_file ${patient}.vep.vcf \
         --format vcf \
         --vcf \
         --symbol \
@@ -30,7 +32,6 @@ process vepanno {
 
     stub:
     """
-    cp -r \
-        /nemo/project/proj-tracerX/working/CMELA/alex/work/cpi.nextflow/pipelines/mela/stub_data/vepanno/* ./
+    ln -s ${params.stub_data_dir}/PEA020/vep_annotated_merged_vcf/PEA020.vep.vcf ./
     """
 }

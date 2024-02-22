@@ -2,6 +2,8 @@ process hlahd {
     input:
     tuple val(patient), val(meta), path(merged_fastq_1), path(merged_fastq_2) 
 
+    publishDir "${params.outputdir}/${patient}/hlahd/", mode: 'copy'
+
     output:
     path output, emit: hlahd_output
     tuple val(patient), val("${meta['sample']}"), env(HLA), emit: hlaresult
@@ -36,9 +38,7 @@ process hlahd {
     stub:
     """
     #copy example output instead of running hlahd
-    cp -r \
-        /nemo/project/proj-tracerX/working/CMELA/alex/work/cpi.nextflow/pipelines/mela/stub_data/hlahd/output \
-        ./output
+    ln -s ${params.stub_data_dir}/PEA020/hlahd/* ./
 
     grep -E '^A|^B|^C' ./output/${meta['sample']}/result/${meta['sample']}_final.result.txt \
         | sed 's/^.\t//' \

@@ -3,6 +3,8 @@ process mergefastq {
     tuple val(patient), val(meta), path(fastq_r1_paths)
     tuple val(patient), val(meta), path(fastq_r2_paths)
 
+    publishDir "${params.outputdir}/${patient}/mergedfastq/", mode: 'copy'
+
     output:
     tuple val(patient), val(meta), path("$patient.${meta['sample']}.merged.r1.fastq.gz"), path("$patient.${meta['sample']}.merged.r2.fastq.gz"), emit: merged_fastq
     
@@ -14,7 +16,10 @@ process mergefastq {
 
     stub:
     """
-    touch ${patient}.${meta['sample']}.merged.r1.fastq.gz
-    touch ${patient}.${meta['sample']}.merged.r2.fastq.gz
+    ln -s ${params.stub_data_dir}/PEA020/mergedfastq/* ./
+
+
+    #touch ${patient}.${meta['sample']}.merged.r1.fastq.gz
+    #touch ${patient}.${meta['sample']}.merged.r2.fastq.gz
     """
 }

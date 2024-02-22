@@ -1,12 +1,14 @@
 process pvacseq {
     input:
-    tuple val(patient), val(normal_sample), val(hlatype), val(sample), path(vepvcf)
+    tuple val(patient), val(normal_sample), val(hlatype), val(tumour_samples), path(vepvcf)
 
     output:
     path "./output"
 
     script:
     """
+    grep "#CHROM" ${vepvcf}
+
     pvacseq run \
         ${vepvcf} \
         ${patient}_${sample} \
