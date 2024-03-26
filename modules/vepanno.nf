@@ -1,11 +1,12 @@
-process vepanno {
+process VEP_ANNO {
     input:
     path vepcache
     path vepfasta
     path vepplugins
     tuple val(patient), val(tumour_samples), path(merged_vcf), path(merged_vcf_index)
 
-    publishDir "${params.outputdir}/${patient}/vep_annotated_merged_vcf/", mode: 'copy'
+    publishDir "${params.outputdir}/${patient}/vep_annotated_merged_vcf/", mode: params.publish_dir_mode, overwrite: params.publish_dir_overwrite
+
 
     output:
     tuple val(patient), val(tumour_samples), path("${patient}.vep.vcf"), emit: vep_vcf
@@ -32,6 +33,6 @@ process vepanno {
 
     stub:
     """
-    ln -s ${params.stub_data_dir}/PEA020/vep_annotated_merged_vcf/PEA020.vep.vcf ./
+    ln -s ${params.stub_data_dir}/${patient}/vep_annotated_merged_vcf/${patient}.vep.vcf ./
     """
 }

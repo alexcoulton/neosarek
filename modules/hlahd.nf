@@ -1,12 +1,13 @@
-process hlahd {
+process HLAHD {
     input:
-    tuple val(patient), val(meta), path(merged_fastq_1), path(merged_fastq_2) 
+    tuple val(patient), val(sample), path(merged_fastq_1), path(merged_fastq_2) 
 
-    publishDir "${params.outputdir}/${patient}/hlahd/", mode: 'copy'
+    publishDir "${params.outputdir}/${patient}/hlahd/", mode: params.publish_dir_mode, overwrite: params.publish_dir_overwrite
+
 
     output:
     path output, emit: hlahd_output
-    tuple val(patient), val("${meta['sample']}"), env(HLA), emit: hlaresult
+    tuple val(patient), val(sample), env(HLA), emit: hlaresult
 
     script:
     """
@@ -21,10 +22,10 @@ process hlahd {
         ${merged_fastq_2} \
         ${params.hlahd_install_directory}/HLA_gene.split.txt \
         ${params.hlahd_install_directory}/dictionary/ \
-        ${meta['sample']} \
+        ${sample} \
         output
 
-    grep -E '^A|^B|^C' ./output/${meta['sample']}/result/${meta['sample']}_final.result.txt \
+    grep -E '^A|^B|^C' ./output/${sample}/result/${sample}_final.result.txt \
         | sed 's/^.\t//' \
         | sed 's/\t/,/g' \
         | tr ',' '\n' \
@@ -38,9 +39,9 @@ process hlahd {
     stub:
     """
     #copy example output instead of running hlahd
-    ln -s ${params.stub_data_dir}/PEA020/hlahd/* ./
+    ln -s ${params.stub_data_dir}/${patient}/hlahd/* ./
 
-    grep -E '^A|^B|^C' ./output/${meta['sample']}/result/${meta['sample']}_final.result.txt \
+    grep -E '^A|^B|^C' ./output/${sample}/result/${sample}_final.result.txt \
         | sed 's/^.\t//' \
         | sed 's/\t/,/g' \
         | tr ',' '\n' \

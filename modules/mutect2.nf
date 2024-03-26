@@ -1,4 +1,4 @@
-process mutect2_forcecall {
+process MUTECT2_FORCECALL {
     input:
     tuple val(patient), val(normal_sample), path(normal_cram), path(tumour_merged_vcf), path(tumour_merged_tbi), val(tumour_sample), path(tumour_cram)
     path germline_resource
@@ -9,10 +9,11 @@ process mutect2_forcecall {
     path genome_index
     path genome_dict
 
-    publishDir "${params.outputdir}/${patient}/tumour_samples/${tumour_sample}/mutect2/", mode: 'copy'
+    publishDir "${params.outputdir}/${patient}/tumour_samples/${tumour_sample}/mutect2/", mode: params.publish_dir_mode, overwrite: params.publish_dir_overwrite
+
 
     output:
-    path("${tumour_sample}.forcecall.norm.vcf.gz")
+    tuple val(patient), val(tumour_sample), path("${tumour_sample}.forcecall.norm.vcf.gz"), emit: mutect2_vcf
     
     script:
     """
@@ -35,6 +36,6 @@ process mutect2_forcecall {
 
     stub:
     """
-    ln -s ${params.stub_data_dir}/PEA020/tumour_samples/${tumour_sample}/mutect2/* ./
+    ln -s ${params.stub_data_dir}/${patient}/tumour_samples/${tumour_sample}/mutect2/* ./
     """
 }
