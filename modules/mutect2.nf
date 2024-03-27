@@ -13,7 +13,7 @@ process MUTECT2_FORCECALL {
 
 
     output:
-    tuple val(patient), val(tumour_sample), path("${tumour_sample}.forcecall.norm.vcf.gz"), emit: mutect2_vcf
+    tuple val(patient), val(tumour_sample), path("${tumour_sample}.forcecall.norm.isec.vcf.gz"), emit: mutect2_vcf
     
     script:
     """
@@ -32,6 +32,10 @@ process MUTECT2_FORCECALL {
         -O ${tumour_sample}.forcecall.vcf.gz
 
     bcftools norm -f ${genome} -m-any ${tumour_sample}.forcecall.vcf.gz -o ${tumour_sample}.forcecall.norm.vcf.gz -O z
+    bcftools index ${tumour_sample}.forcecall.norm.vcf.gz
+
+    #intersect the force-called vcf with the master vcf to make sure no new variants are called
+    bcftools isec -n=2 -w1 ${tumour_sample}.forcecall.norm.vcf.gz ${tumour_merged_vcf} -Oz -o ${tumour_sample}.forcecall.norm.isec.vcf.gz
     """
 
     stub:

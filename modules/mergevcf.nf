@@ -1,6 +1,6 @@
 process MERGE_VCF {
     input:
-    tuple val(patient), val(tumour_samples), val(normal_samples), path(vcf_paths), path(vcf_tbi_paths)
+    tuple val(patient), val(non_ffpe_tumour_samples), val(tumour_samples), val(ffpe), val(normal_samples), path(vcf_paths), path(vcf_tbi_paths)
     path genome
     path genome_index
     path genome_dict
@@ -19,7 +19,15 @@ process MERGE_VCF {
         tabix -p vcf \$output.passonly.vcf.gz
     done
 
-    bcftools merge ./*.norm.vcf.gz.passonly.vcf.gz -o ${patient}.tumour.merged.vcf.gz -O z --force-samples
+    file_count=\$(ls -1 ./*.norm.vcf.gz.passonly.vcf.gz 2>/dev/null | wc -l)
+
+    echo \$file_count
+
+    if [ "\$file_count" -gt 1 ]; then
+        bcftools merge ./*.norm.vcf.gz.passonly.vcf.gz -o ${patient}.tumour.merged.vcf.gz -O z --force-samples
+    else
+        cp ./*.norm.vcf.gz.passonly.vcf.gz ${patient}.tumour.merged.vcf.gz
+    fi
 
     #mutect2 force calling will not work with very large indels
     #limit these to 200 in length:

@@ -21,7 +21,8 @@ process PVACSEQ {
         -e1 8,9,10 \
         -e2 15 \
         -t 8 \
-        --normal-sample-name ${patient}_${normal_sample}
+        --normal-sample-name ${patient}_${normal_sample} \
+        --iedb-install-directory /opt/iedb
     """
 
     stub:
