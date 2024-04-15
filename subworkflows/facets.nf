@@ -1,5 +1,8 @@
 include { FACETS_SNP_PILEUP } from '../modules/snppileup.nf'
 include { FACETS_RUN } from '../modules/snppileup.nf'
+include { FACETS_RUN_ALTERNATE_SOLUTION } from '../modules/snppileup.nf'
+include { FACETS_DIAGNOSTICS } from '../modules/snppileup.nf'
+include { FACETS_DIAGNOSTICS_ALT } from '../modules/snppileup.nf'
 
 workflow FACETS_CN_CALLING {
     take:
@@ -17,7 +20,21 @@ workflow FACETS_CN_CALLING {
         .dump(tag: 'facets_cram_input', pretty: true)
 
     FACETS_SNP_PILEUP(facets_cram_input)
+
+    FACETS_RUN_ALTERNATE_SOLUTION(FACETS_SNP_PILEUP.out.pileup_file.dump(tag: 'FACETS_SNP_PILEUP.out.pileup_file', pretty: true))
     FACETS_RUN(FACETS_SNP_PILEUP.out.pileup_file.dump(tag: 'FACETS_SNP_PILEUP.out.pileup_file', pretty: true))
+
+    FACETS_DIAGNOSTICS(
+        FACETS_RUN.out.facets_output
+            .groupTuple()
+            .map { it + 'orig_run' }
+    )
+
+    FACETS_DIAGNOSTICS_ALT(
+        FACETS_RUN_ALTERNATE_SOLUTION.out.facets_output
+            .groupTuple()
+            .map { it + 'alt_run' }
+    )
 
     emit:
     facets_output = FACETS_RUN.out.facets_output

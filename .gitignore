@@ -4,3 +4,4 @@ work/
 .nextflow.log*
 .nextflow/
 run_report/
+snp-pileup
