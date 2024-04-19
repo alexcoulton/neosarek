@@ -1,6 +1,24 @@
+process NORMALIZE_FILTER_VCF {
+    input:
+    tuple val(patient), val(tumour_sample), val(ffpe), val(normal_sample), path(vcf), path(tbi)
+    path genome
+    path genome_index
+    path genome_dict
+
+    output:
+    tuple val(patient), val(tumour_sample), val(ffpe), val(normal_sample), path("${tumour_sample}.norm.passonly.vcf.gz"), path("${tumour_sample}.norm.passonly.vcf.gz.tbi"), emit: normalized_filtered_vcf
+
+    script:
+    """
+    bcftools norm -f ${genome} -m-any ${vcf} -o ${tumour_sample}.norm.vcf.gz -O z
+    bcftools view -i 'FILTER="PASS" || FILTER="clustered_events"' -o ${tumour_sample}.norm.passonly.vcf.gz ${tumour_sample}.norm.vcf.gz -O z
+    tabix -p vcf ${tumour_sample}.norm.passonly.vcf.gz
+    """
+}
+
 process MERGE_VCF {
     input:
-    tuple val(patient), val(non_ffpe_tumour_samples), val(tumour_samples), val(ffpe), val(normal_samples), path(vcf_paths), path(vcf_tbi_paths)
+    tuple val(patient), val(tumour_samples), val(ffpe_status), val(normal_samples), path(vcf), path(tbi)
     path genome
     path genome_index
     path genome_dict
@@ -12,21 +30,15 @@ process MERGE_VCF {
     
     script:
     """
-    for vcf in ./*.vcf.gz; do
-        output="\${vcf%.vcf.gz}.norm.vcf.gz"
-        bcftools norm -f ${genome} -m-any "\$vcf" -o "\$output" -O z
-        bcftools view -i 'FILTER="PASS" || FILTER="clustered_events"' -o \$output.passonly.vcf.gz \$output -O z
-        tabix -p vcf \$output.passonly.vcf.gz
-    done
-
-    file_count=\$(ls -1 ./*.norm.vcf.gz.passonly.vcf.gz 2>/dev/null | wc -l)
+    file_count=\$(ls -1 ./*.norm.passonly.vcf.gz 2>/dev/null | wc -l)
 
     echo \$file_count
 
-    if [ "\$file_count" -gt 1 ]; then
-        bcftools merge ./*.norm.vcf.gz.passonly.vcf.gz -o ${patient}.tumour.merged.vcf.gz -O z --force-samples
+    #if there is more than one sample for this patient, perform merge
+    if [ "\$file_count" -gt 1 ]; then 
+        bcftools merge ./*.norm.passonly.vcf.gz -o ${patient}.tumour.merged.vcf.gz -O z --force-samples
     else
-        cp ./*.norm.vcf.gz.passonly.vcf.gz ${patient}.tumour.merged.vcf.gz
+        cp ./*.norm.passonly.vcf.gz ${patient}.tumour.merged.vcf.gz
     fi
 
     #mutect2 force calling will not work with very large indels

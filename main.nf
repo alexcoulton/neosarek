@@ -21,6 +21,7 @@ include { PYCLONE } from './subworkflows/pyclone.nf'
 //IMPORT PROCESSES
 //////////////////////////////
 
+include { NORMALIZE_FILTER_VCF } from './modules/mergevcf.nf'
 include { MERGE_VCF } from './modules/mergevcf.nf'
 include { MUTECT2_FORCECALL } from './modules/mutect2.nf'
 
@@ -72,6 +73,7 @@ workflow {
         .map { [it[0], it[1], params.sarek_output_dir + '/variant_calling/haplotypecaller/' + it[1] + '/' + it[1] + '.haplotypecaller.filtered.vcf.gz'] }
         .dump(tag: 'normal_vcf')
 
+
     //[patient, [tumour_samples], [non_ffpe_tumour_samples], [normal_sample(s)], [tumour_sample_mut2_vcfs], [tumour_sample_mut2_vcf_indexes]]
     tumour_samples_vcf = tumour_samples_trimmed
         .combine(normal_samples_trimmed, by: 0)
@@ -84,47 +86,26 @@ workflow {
             params.sarek_output_dir + '/variant_calling/mutect2/' + it.tumour_samp + '_vs_' + it.normal_samp + '/' + it.tumour_samp + '_vs_' + it.normal_samp + '.mutect2.filtered.vcf.gz',
             params.sarek_output_dir + '/variant_calling/mutect2/' + it.tumour_samp + '_vs_' + it.normal_samp + '/' + it.tumour_samp + '_vs_' + it.normal_samp + '.mutect2.filtered.vcf.gz.tbi'
             ]}
-        .groupTuple() //groupTuple throws error when list elements are named
-        .map { item -> //the following logic removes FFPE samples from the merged VCF as we do not want to call de novo mutations in these
-            def identifiers = item[1]
-            def flags = item[2]
-            def filteredIdentifiers = []
-            def filteredPaths = []
-            def filteredTbi = []
-
-            // Filter identifiers based on flags
-            for (int i = 0; i < flags.size(); i++) {
-                if (flags[i] == '0') {
-                    filteredIdentifiers << identifiers[i]
-                }
-            }
-
-            // Filter vcf paths based on flags
-            for (int i = 0; i < flags.size(); i++) {
-                if (flags[i] == '0') {
-                    filteredPaths << item[4][i]
-                }
-            }
-
-            // Filter vcf indexes based on flags
-            for (int i = 0; i < flags.size(); i++) {
-                if (flags[i] == '0') {
-                    filteredTbi << item[5][i]
-                }
-            }
-
-            // Return the original structure with filtered identifiers
-            return [item[0], identifiers, filteredIdentifiers, flags, item[3], filteredPaths, filteredTbi]
-        }
-        //.dump(tag: 'tumour_samples_vcf')
 
     //////////////////////////////
     //EXECUTION STAGES
     //////////////////////////////
 
     if(params.stage == 'initial') {
-        MERGE_VCF(
+        NORMALIZE_FILTER_VCF(
             tumour_samples_vcf,
+            params.genome_reference,
+            params.genome_index,
+            params.genome_dict
+        )
+
+        //[patient, tumour_samples, ffpe_status, normal_samples, vcfs, tbis]
+        merge_vcf_input = NORMALIZE_FILTER_VCF.out.normalized_filtered_vcf
+            .filter { it[2] != '1' } //filter out FFPE samples
+            .groupTuple()
+
+        MERGE_VCF(
+            merge_vcf_input,
             params.genome_reference,
             params.genome_index,
             params.genome_dict
@@ -155,7 +136,6 @@ workflow {
                 params.sarek_output_dir + '/variant_calling/mutect2/' + it[5] + '_vs_' + it[1] + '/' + it[5] + '_vs_' + it[1] + '.mutect2.filtered.vcf.gz.tbi'
                 ] }
             .dump(tag: 'mutect2_files')
-
 
         MUTECT2_FORCECALL(
             mutect2_files,

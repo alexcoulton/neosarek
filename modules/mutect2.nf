@@ -16,6 +16,8 @@ process MUTECT2_FORCECALL {
     
     script:
     """
+    #perform Mutect2 calling at selected sites from master VCF to
+    #generate force-called VCF for this sample
     gatk Mutect2 \
         -R ${genome} \
         -I ${tumour_cram} \
@@ -30,27 +32,37 @@ process MUTECT2_FORCECALL {
         --sequence-dictionary ${genome_dict} \
         -O ${tumour_sample}.forcecall.vcf.gz
 
+    #Generate ROQ / strand bias metric files
     gatk LearnReadOrientationModel \
         -I ${tumour_sample}.f1r2.tar.gz \
         -O ${tumour_sample}.readorientation.model.tar.gz
 
+    #Annotate force-called VCF with ROQ / pass-fail metrics
     gatk FilterMutectCalls \
         -R ${genome} \
         -V ${tumour_sample}.forcecall.vcf.gz \
         --ob-priors ${tumour_sample}.readorientation.model.tar.gz \
         -O ${tumour_sample}.forcecall.roq.vcf.gz
 
-
+    #Normalize and index force-called VCF
     bcftools norm -f ${genome} -m-any ${tumour_sample}.forcecall.roq.vcf.gz -o ${tumour_sample}.forcecall.roq.norm.vcf.gz -O z
     bcftools index ${tumour_sample}.forcecall.roq.norm.vcf.gz
+
+    #Normalize and filter original VCF for this sample for passing variants,
+    #will be used to annotate variants which have been de-novo called (i.e. not rescued)
+    bcftools norm -f ${genome} -m-any ${orig_mutect2_vcf} -o ${tumour_sample}.orig.norm.vcf.gz -O z
+    bcftools view -i 'FILTER="PASS" || FILTER="clustered_events"' -o ${tumour_sample}.orig.passonly.vcf.gz ${tumour_sample}.orig.norm.vcf.gz -O z
+    tabix ${tumour_sample}.orig.passonly.vcf.gz
 
     #intersect the force-called vcf with the master vcf to make sure no new variants are called
     bcftools isec -n=2 -w1 ${tumour_sample}.forcecall.roq.norm.vcf.gz ${tumour_merged_vcf} -Oz -o ${tumour_sample}.forcecall.roq.norm.isec.vcf.gz
 
     tabix ${tumour_sample}.forcecall.roq.norm.isec.vcf.gz
 
+    #Add DENOVO_CALLED to INFO field of the force-called VCF,
+    #any variants lacking this TAG have been rescued
     bcftools annotate \
-        -a ${orig_mutect2_vcf} \
+        -a ${tumour_sample}.orig.passonly.vcf.gz \
         -m DENOVO_CALLED \
         ${tumour_sample}.forcecall.roq.norm.isec.vcf.gz \
         -o ${tumour_sample}.forcecall.roq.norm.isec.rescue_annot.vcf.gz 
