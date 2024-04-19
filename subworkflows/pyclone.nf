@@ -2,6 +2,8 @@ include { PREPARE_PYCLONE_INPUT } from '../modules/pyclone.nf'
 include { MERGE_PYCLONE_INPUT_PER_PATIENT } from '../modules/pyclone.nf'
 include { MERGE_CONIPHER_INPUT_PER_PATIENT } from '../modules/pyclone.nf'
 include { RUN_PYCLONE } from '../modules/pyclone.nf'
+include { RUN_PAIRTREE } from '../modules/pyclone.nf'
+include { PREPARE_PAIRTREE_INPUT } from '../modules/pyclone.nf'
 include { RUN_CONIPHER } from '../modules/pyclone.nf'
 
 workflow PYCLONE {
@@ -28,16 +30,23 @@ workflow PYCLONE {
 
     RUN_PYCLONE(MERGE_PYCLONE_INPUT_PER_PATIENT.out.merged_pyclone_input)
 
-    MERGE_CONIPHER_INPUT_PER_PATIENT(
-        PREPARE_PYCLONE_INPUT.out.conipher_input_per_sample
-            .groupTuple()
-    )
+    pairtree_input_prep = ch_pyclone_input
+        .groupTuple()
 
-    RUN_CONIPHER(
-        MERGE_CONIPHER_INPUT_PER_PATIENT.out.merged_conipher_input,
-        params.conipher_prefix,
-        '/nemo/project/proj-tracerX/working/CMELA/alex/work/external.repos/CONIPHER'
-    )
+    pairtree_input_prep = pairtree_input_prep
+        .combine(RUN_PYCLONE.out.pyclone_results, by: 0)
 
+    PREPARE_PAIRTREE_INPUT(pairtree_input_prep)
+    //RUN_PAIRTREE(PREPARE_PAIRTREE_INPUT.out.pairtree_input_files)
 
+    //MERGE_CONIPHER_INPUT_PER_PATIENT(
+        //PREPARE_PYCLONE_INPUT.out.conipher_input_per_sample
+            //.groupTuple()
+    //)
+
+    //RUN_CONIPHER(
+        //MERGE_CONIPHER_INPUT_PER_PATIENT.out.merged_conipher_input,
+        //params.conipher_prefix,
+        //'/nemo/project/proj-tracerX/working/CMELA/alex/work/external.repos/CONIPHER'
+    //)
 }

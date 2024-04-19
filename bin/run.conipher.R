@@ -25,5 +25,6 @@ conipher_run(
     case_id = patient,
     prefix = conipher.prefix,
     out_dir = out_dir,
-    input_tsv_loc = input_tsv
+    input_tsv_loc = input_tsv,
+    nProcs = 8
 )

@@ -77,24 +77,49 @@ process RUN_PYCLONE {
     """
 }
 
-process RUN_PAIRTREE {
+process PREPARE_PAIRTREE_INPUT {
     input:
-    tuple val(patient), path(pyclone_input)
+    tuple val(patient), val(sample), path(mutect_vcfs), path(facets_rds), path(pyclone_results)
 
-    publishDir "${params.outputdir}/${patient}/pyclone/", mode: params.publish_dir_mode, overwrite: params.publish_dir_overwrite
+    publishDir "${params.outputdir}/${patient}/pairtree/", mode: params.publish_dir_mode, overwrite: params.publish_dir_overwrite
 
     output:
-    tuple val(patient), path("${patient}.pyclone.results.tsv"), emit: pyclone_results
+    tuple val(patient), path("${patient}.pairtree.ssm"), path("${patient}.pairtree.input.json"), path("${patient}.combined.mutations.tsv"), emit: pairtree_input_files
 
     script:
     """
-    pyclone-vi fit -i ${pyclone_input} -o ${patient}.pyclone.h5 -c 40 -d beta-binomial -r 10
-    pyclone-vi write-results-file -i ${patient}.pyclone.h5 -o ${patient}.pyclone.results.tsv
+    echo ""
+    /nemo/project/proj-tracerX/working/CMELA/alex/work/cpi.nextflow/pipelines/mela/bin/pairtree.input.prep.R \
+        ${patient} \
+        ${sample} \
+        ${mutect_vcfs} \
+        ${facets_rds} \
+        ${pyclone_results}
     """
+}
 
-    stub:
+process RUN_PAIRTREE {
+    input:
+    tuple val(patient), path(pairtree_ssm), path(pairtree_json)
+
+    publishDir "${params.outputdir}/${patient}/pairtree/", mode: params.publish_dir_mode, overwrite: params.publish_dir_overwrite
+
+    output:
+    tuple path("${patient}.pairtree.results.html"), path("${patient}.pairtree.results.npz"), emit: pairtree_results
+
+    script:
     """
-    ln -sf ${params.stub_data_dir}/${patient}/pyclone/* ./
+    pairtree \
+        --params ${pairtree_json} \
+        ${pairtree_ssm} \
+        ${patient}.pairtree.results.npz
+
+    plottree \
+        --runid ${patient} \
+        ${pairtree_ssm} \
+        ${pairtree_json} \
+        ${patient}.pairtree.results.npz \
+        ${patient}.pairtree.results.html
     """
 }
 

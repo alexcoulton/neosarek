@@ -130,8 +130,8 @@ workflow {
             params.genome_dict
         )
 
-        HLA_NEOANTIGEN(normal_samples, MERGE_VCF.out.merged_vcf.dump(tag: 'MERGE_VCF.out.merged_vcf'))
-        FACETS_CN_CALLING(tumour_crams, normal_crams, normal_vcf)
+        //HLA_NEOANTIGEN(normal_samples, MERGE_VCF.out.merged_vcf.dump(tag: 'MERGE_VCF.out.merged_vcf'))
+        //FACETS_CN_CALLING(tumour_crams, normal_crams, normal_vcf)
 
         ////for every tumour .cram, create a list containing the merged tumour VCF and the normal .cram
         //[patient, normal_sample, normal_cram, master_tumour_vcf, master_tumour_vcf_index, tumour_sample, tumour_cram]
@@ -143,7 +143,19 @@ workflow {
                     .map { it.flatten().unique() }
             )
             .map { it.flatten().unique() }
+            .map { [
+                it[0],
+                it[1],
+                it[2],
+                it[3],
+                it[4],
+                it[5],
+                it[6],
+                params.sarek_output_dir + '/variant_calling/mutect2/' + it[5] + '_vs_' + it[1] + '/' + it[5] + '_vs_' + it[1] + '.mutect2.filtered.vcf.gz',
+                params.sarek_output_dir + '/variant_calling/mutect2/' + it[5] + '_vs_' + it[1] + '/' + it[5] + '_vs_' + it[1] + '.mutect2.filtered.vcf.gz.tbi'
+                ] }
             .dump(tag: 'mutect2_files')
+
 
         MUTECT2_FORCECALL(
             mutect2_files,
