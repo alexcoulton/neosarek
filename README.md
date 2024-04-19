@@ -6,6 +6,43 @@ calling, HLA-typing, Neoantigen calling, and phylogenetic reconstruction.
 
 # Usage
 
+As copy number solutions need to be inspected manually, the pipeline is run in two stages.
+
+Example first stage run:
+
+```
+#standard run
+cd ~/work/cpi.nextflow/pipelines/mela/
+nextflow ./main.nf \
+    --samplesheet ~/work/ucl/data/mela.peace.new/pea004.ffpe.sarek.samplesheet.csv \
+    --outputdir /nemo/project/proj-tracerX/working/CMELA/alex/work/cpi.nextflow/pipelines/mela/output/pea004_ffpe_roq \
+    --sarek_output_dir ~/work/cpi.nextflow/pipelines/sarek/output_pea004/ \
+    -with-timeline run_report/pea004.ffpe.hla.roq.timeline.txt \
+    -with-trace run_report/pea004.ffpe.hla.roq.trace.txt \
+    -with-report run_report/pea004.ffpe.hla.roq.rep.html \
+    -profile cluster \
+    --stage 'initial' \
+```
+
+Example second stage run:
+
+```
+#standard run
+cd ~/work/cpi.nextflow/pipelines/mela/
+nextflow ./main.nf \
+    --samplesheet ~/work/ucl/data/mela.peace.new/pea004.ffpe.sarek.samplesheet.csv \
+    --outputdir /nemo/project/proj-tracerX/working/CMELA/alex/work/cpi.nextflow/pipelines/mela/output/pea004_ffpe_roq \
+    --sarek_output_dir ~/work/cpi.nextflow/pipelines/sarek/output_pea004/ \
+    -with-timeline run_report/pea004.ffpe.hla.roq.timeline.txt \
+    -with-trace run_report/pea004.ffpe.hla.roq.trace.txt \
+    -with-report run_report/pea004.ffpe.hla.roq.rep.html \
+    -profile cluster \
+    --stage 'review' \
+```
+
+
+
+
 # Detailed information
 
 
