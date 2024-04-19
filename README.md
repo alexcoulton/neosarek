@@ -1,8 +1,9 @@
 # NeoSarek
 
 A Nextflow pipeline designed for use subsequent to the nf-core Sarek pipeline
-that performs multi-sample / multi-regional mutation calling, copy number
-calling, HLA-typing, Neoantigen calling, and phylogenetic reconstruction.
+that performs multi-sample / multi-regional mutation calling (Mutect2), copy
+number calling (Facets), HLA-typing (HLA-HD), Neoantigen calling (pVACseq), and
+phylogenetic reconstruction (Pyclone + Pairtree).
 
 # Usage
 
@@ -39,11 +40,6 @@ nextflow ./main.nf \
     -profile cluster \
     --stage 'review' \
 ```
-
-
-
-
-# Detailed information
 
 
 # Pipeline parameters
