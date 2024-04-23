@@ -23,6 +23,7 @@ include { PYCLONE } from './subworkflows/pyclone.nf'
 
 include { NORMALIZE_FILTER_VCF } from './modules/mergevcf.nf'
 include { MERGE_VCF } from './modules/mergevcf.nf'
+include { FUNCOTATOR } from './modules/mergevcf.nf'
 include { MUTECT2_FORCECALL } from './modules/mutect2.nf'
 
 //////////////////////////////
@@ -73,7 +74,6 @@ workflow {
         .map { [it[0], it[1], params.sarek_output_dir + '/variant_calling/haplotypecaller/' + it[1] + '/' + it[1] + '.haplotypecaller.filtered.vcf.gz'] }
         .dump(tag: 'normal_vcf')
 
-
     //[patient, [tumour_samples], [non_ffpe_tumour_samples], [normal_sample(s)], [tumour_sample_mut2_vcfs], [tumour_sample_mut2_vcf_indexes]]
     tumour_samples_vcf = tumour_samples_trimmed
         .combine(normal_samples_trimmed, by: 0)
@@ -111,8 +111,18 @@ workflow {
             params.genome_dict
         )
 
-        //HLA_NEOANTIGEN(normal_samples, MERGE_VCF.out.merged_vcf.dump(tag: 'MERGE_VCF.out.merged_vcf'))
-        //FACETS_CN_CALLING(tumour_crams, normal_crams, normal_vcf)
+        FUNCOTATOR(
+            MERGE_VCF.out.merged_vcf,
+            params.genome_reference,
+            params.genome_index,
+            params.genome_dict,
+            params.genome_version,
+            params.funcotator_data
+
+        )
+
+        HLA_NEOANTIGEN(normal_samples, MERGE_VCF.out.merged_vcf.dump(tag: 'MERGE_VCF.out.merged_vcf'))
+        FACETS_CN_CALLING(tumour_crams, normal_crams, normal_vcf)
 
         ////for every tumour .cram, create a list containing the merged tumour VCF and the normal .cram
         //[patient, normal_sample, normal_cram, master_tumour_vcf, master_tumour_vcf_index, tumour_sample, tumour_cram]
@@ -163,8 +173,9 @@ workflow {
                     [
                         it[0],
                         it[1],
-                        params.outputdir + '/' + it[0] + '/tumour_samples/' + it[1] + '/mutect2/' + it[1] + '.forcecall.norm.isec.vcf.gz',
+                        params.outputdir + '/' + it[0] + '/tumour_samples/' + it[1] + '/mutect2/' + it[1] + '.forcecall.roq.norm.isec.rescue_annot.vcf.gz',
                         params.outputdir + '/' + it[0] + '/facets/review/' + it[1] + '.facets.rds', //reviewed solutions
+                        params.outputdir + '/' + it[0] + '/funcotator/' + it[0] + '.tumour.merged.indel200.norm.anno.vcf.gz' //reviewed solutions
                     ]
                 }
 

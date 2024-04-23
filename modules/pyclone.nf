@@ -1,6 +1,6 @@
 process PREPARE_PYCLONE_INPUT {
     input:
-    tuple val(patient), val(sample), path(mutect2_vcf), path(facets_output)
+    tuple val(patient), val(sample), path(mutect2_vcf), path(facets_output), path(annotations)
     val(conipher_prefix)
 
     publishDir "${params.outputdir}/${patient}/pyclone/", mode: params.publish_dir_mode, overwrite: params.publish_dir_overwrite
@@ -77,9 +77,30 @@ process RUN_PYCLONE {
     """
 }
 
+process COLLATE_MUTATION_CN_DATA {
+    input:
+    tuple val(patient), val(sample), path(mutect_vcfs), path(facets_rds), path(annotations), path(pyclone_results)
+
+    publishDir "${params.outputdir}/${patient}/mutation_cn/", mode: params.publish_dir_mode, overwrite: params.publish_dir_overwrite
+
+    output:
+    tuple val(patient), path("${patient}.combined.mutations.tsv"), path("${patient}.combined.seg.tsv"), emit: combined_mutation_seg_data
+
+    script:
+    """
+    /nemo/project/proj-tracerX/working/CMELA/alex/work/cpi.nextflow/pipelines/mela/bin/collate.mut.cn.R \
+        ${patient} \
+        ${sample} \
+        ${mutect_vcfs} \
+        ${facets_rds} \
+        ${pyclone_results} \
+        ${annotations}
+    """
+}
+
 process PREPARE_PAIRTREE_INPUT {
     input:
-    tuple val(patient), val(sample), path(mutect_vcfs), path(facets_rds), path(pyclone_results)
+    tuple val(patient), path(mut), path(cn)
 
     publishDir "${params.outputdir}/${patient}/pairtree/", mode: params.publish_dir_mode, overwrite: params.publish_dir_overwrite
 
@@ -91,10 +112,7 @@ process PREPARE_PAIRTREE_INPUT {
     echo ""
     /nemo/project/proj-tracerX/working/CMELA/alex/work/cpi.nextflow/pipelines/mela/bin/pairtree.input.prep.R \
         ${patient} \
-        ${sample} \
-        ${mutect_vcfs} \
-        ${facets_rds} \
-        ${pyclone_results}
+        ${mut}
     """
 }
 

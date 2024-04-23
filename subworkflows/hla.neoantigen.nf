@@ -13,6 +13,7 @@ def processNormalSamples(normalSamples, int readIndex) {
 include { MERGE_FASTQ } from '../modules/merge.fastq.nf'
 include { HLAHD } from '../modules/hlahd.nf'
 include { VEP_ANNO } from '../modules/vepanno.nf'
+include { NORMALIZE_VCF } from '../modules/vepanno.nf'
 include { PVACSEQ } from '../modules/pvacseq.nf'
 
 workflow HLA_NEOANTIGEN {
@@ -45,6 +46,13 @@ workflow HLA_NEOANTIGEN {
     //Need to run our own VEP annotation process
     VEP_ANNO(params.vepcache, params.genome_reference, params.vepplugins, ch_merged_vcf)
 
+    NORMALIZE_VCF(
+        VEP_ANNO.out.vep_vcf,
+        params.genome_reference,
+        params.genome_index,
+        params.genome_dict
+    )
+
     //Here we cross the hlahd results from the normal samples
     //with the VEP-annotated tumour sample VCFs
     //The cross is performed using the patient ID as the key
@@ -52,7 +60,7 @@ workflow HLA_NEOANTIGEN {
     PVACSEQ(
         HLAHD.out.hlaresult
             .cross(
-                VEP_ANNO.out.vep_vcf
+                NORMALIZE_VCF.out.vep_vcf_norm
                     .map { [it[0], it[1][0], it[2]] }
             )
             .map{ it.flatten() }

@@ -36,3 +36,19 @@ process VEP_ANNO {
     ln -s ${params.stub_data_dir}/${patient}/vep_annotated_merged_vcf/${patient}.vep.vcf ./
     """
 }
+
+process NORMALIZE_VCF {
+    input:
+    tuple val(patient), val(tumour_samples), path(vep)
+    path genome
+    path genome_index
+    path genome_dict
+
+    output:
+    tuple val(patient), val(tumour_samples), path("${patient}.vep.norm.vcf"), emit: vep_vcf_norm
+
+    script:
+    """
+    bcftools norm -f ${genome} -m-any ${patient}.vep.vcf -o ${patient}.vep.norm.vcf -O v
+    """
+}

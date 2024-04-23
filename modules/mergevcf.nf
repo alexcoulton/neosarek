@@ -53,3 +53,29 @@ process MERGE_VCF {
     ln -s ${params.stub_data_dir}/${patient}/mergedvcf/* ./
     """
 }
+
+process FUNCOTATOR {
+    input:
+    tuple val(patient), val(tumour_samples), path(vcf), path(tbi)
+    path genome
+    path genome_index
+    path genome_dict
+    val genome_version
+    path funcotator_data
+
+    publishDir "${params.outputdir}/${patient}/funcotator/", mode: params.publish_dir_mode, overwrite: params.publish_dir_overwrite
+
+    output:
+    tuple val(patient), val(tumour_samples), path("${patient}.tumour.merged.indel200.norm.anno.vcf.gz"), path("${patient}.tumour.merged.indel200.norm.anno.vcf.gz.tbi"), emit: annotated_vcf
+
+    script:
+    """
+    gatk Funcotator \
+        --output ./${patient}.tumour.merged.indel200.norm.anno.vcf.gz \
+        --ref-version ${genome_version} \
+        --data-sources-path ${funcotator_data} \
+        --output-file-format VCF \
+        --variant ${vcf} \
+        --reference ${genome}
+    """
+}
