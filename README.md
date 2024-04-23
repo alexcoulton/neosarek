@@ -41,6 +41,9 @@ nextflow ./main.nf \
     --stage 'review' \
 ```
 
+# Pipeline schematic
+
+![Pipeline schematic](./res/pipeline.diagram.png)
 
 # Pipeline parameters
 
@@ -89,7 +92,7 @@ nextflow ./main.nf \
 NeoSarek was designed with the Melanoma PEACE cohort in mind, where there are
 many clonally-related samples from a single patient (in this case metastases
 stemming from a singular origin.) Mutation-calling prior to NeoSarek is
-performed with Mutect2 from Sarek in single-sample mode. As the samples are
+performed with Mutect2 in Sarek using single-sample mode. As the samples are
 clonally-related, we can expect that some mutations may be present across more
 than one sample. However, these mutations may not always be called by Mutect2
 if for example there is low alternate allele-frequency. The presense of a
