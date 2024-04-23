@@ -93,6 +93,18 @@ nextflow ./main.nf \
 
 `panel_of_normals_index`: Path to panel of normals index
 
+# Sample sheet
+
+The sample sheet for NeoSarek is identical to the Sarek samplesheet input with
+the exception of the `ffpe` column, which should be either `0` or `1`, and
+indicates if a sample has undergone formalin-fixation and parafin embedding
+before sequencing. In this case, calling of mutations in this sample will be
+limited to mutations that have been called in fresh samples only (i.e. no
+de-novo calling of mutations in FFPE samples)
+
+Columns are `patient`, `sex`, `status`, `sample`, `ffpe`, `lane`, `fastq_1`,
+`fastq_2`.
+
 
 # Multi-regional mutation calling process:
 
@@ -140,11 +152,6 @@ pipeline (i.e. from `outputdir/patient/facets/output` or
 
 After this has been done, the second stage of the pipeline `--stage 'review'`
 can be run.
-
-
-
-
-
 
 # Process documentation
 
