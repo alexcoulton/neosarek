@@ -8,11 +8,26 @@ snp.pileup.file = args[[2]]
 rds.output = args[[3]]
 plot.output = args[[4]]
 diag.plot = args[[5]]
+genome.version = args[[6]]
+
+############################
+#DEBUG 
+############################
+
+#sample = 'SPA817A1'
+#snp.pileup.file = 'SPA817A1.facets.pileup.csv'
+#rds.output = 'SPA817A1.facets.rds'
+#plot.output = 'SPA817A1.facets.plot.pdf'
+#diag.plot = 'SPA817A1.facets.diag.plot.pdf'
+
+############################
+#CONTINUE 
+############################
 
 library(facets)
 
 snps1 = readSnpMatrix(snp.pileup.file)
-snps2 = preProcSample(snps1)
+snps2 = preProcSample(snps1, gbuild = genome.version)
 snps3 = procSample(snps2)
 fit = emcncf(snps3)
 

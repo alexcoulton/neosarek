@@ -21,6 +21,7 @@ process FACETS_SNP_PILEUP {
 process FACETS_RUN {
     input:
     tuple val(patient), val(normal_sample), val(tumour_sample), path(snp_pileup_file)
+    val(genome_version)
 
     publishDir "${params.outputdir}/${patient}/facets/output/", mode: params.publish_dir_mode, overwrite: params.publish_dir_overwrite
 
@@ -29,7 +30,13 @@ process FACETS_RUN {
 
     script:
     """
-    /nemo/project/proj-tracerX/working/CMELA/alex/work/cpi.nextflow/pipelines/mela/bin/run.facets.R ${tumour_sample} ${snp_pileup_file} ${tumour_sample}.facets.rds ${tumour_sample}.facets.plot.pdf ${tumour_sample}.facets.diag.plot.pdf
+    /nemo/project/proj-tracerX/working/CMELA/alex/work/cpi.nextflow/pipelines/mela/bin/run.facets.R \
+        ${tumour_sample} \
+        ${snp_pileup_file} \
+        ${tumour_sample}.facets.rds \
+        ${tumour_sample}.facets.plot.pdf \
+        ${tumour_sample}.facets.diag.plot.pdf \
+        ${genome_version}
     """
 
     stub:
@@ -41,6 +48,7 @@ process FACETS_RUN {
 process FACETS_RUN_ALTERNATE_SOLUTION {
     input:
     tuple val(patient), val(normal_sample), val(tumour_sample), path(snp_pileup_file)
+    val(genome_version)
 
     publishDir "${params.outputdir}/${patient}/facets/alt_solution/", mode: params.publish_dir_mode, overwrite: params.publish_dir_overwrite
 
@@ -49,7 +57,13 @@ process FACETS_RUN_ALTERNATE_SOLUTION {
 
     script:
     """
-    /nemo/project/proj-tracerX/working/CMELA/alex/work/cpi.nextflow/pipelines/mela/bin/run.facets.alt.solution.R ${tumour_sample} ${snp_pileup_file} ${tumour_sample}.facets.rds ${tumour_sample}.facets.plot.pdf ${tumour_sample}.facets.diag.plot.pdf
+    /nemo/project/proj-tracerX/working/CMELA/alex/work/cpi.nextflow/pipelines/mela/bin/run.facets.alt.solution.R \
+        ${tumour_sample} \
+        ${snp_pileup_file} \
+        ${tumour_sample}.facets.rds \
+        ${tumour_sample}.facets.plot.pdf \
+        ${tumour_sample}.facets.diag.plot.pdf \
+        ${genome_version}
     """
 }
 

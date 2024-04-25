@@ -12,6 +12,7 @@ process HLAHD {
     script:
     """
     mkdir output
+    echo ""
 
     hlahd.sh \
         -t 8 \

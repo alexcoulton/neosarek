@@ -21,8 +21,15 @@ workflow FACETS_CN_CALLING {
 
     FACETS_SNP_PILEUP(facets_cram_input)
 
-    FACETS_RUN_ALTERNATE_SOLUTION(FACETS_SNP_PILEUP.out.pileup_file.dump(tag: 'FACETS_SNP_PILEUP.out.pileup_file', pretty: true))
-    FACETS_RUN(FACETS_SNP_PILEUP.out.pileup_file.dump(tag: 'FACETS_SNP_PILEUP.out.pileup_file', pretty: true))
+    FACETS_RUN_ALTERNATE_SOLUTION(
+        FACETS_SNP_PILEUP.out.pileup_file.dump(tag: 'FACETS_SNP_PILEUP.out.pileup_file'),
+        params.genome_version
+    )
+
+    FACETS_RUN(
+        FACETS_SNP_PILEUP.out.pileup_file.dump(tag: 'FACETS_SNP_PILEUP.out.pileup_file'),
+        params.genome_version
+    )
 
     FACETS_DIAGNOSTICS(
         FACETS_RUN.out.facets_output

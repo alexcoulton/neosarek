@@ -67,7 +67,10 @@ process RUN_PYCLONE {
 
     script:
     """
+    echo "Run pyclone-vi fit"
+    pyclone-vi
     pyclone-vi fit -i ${pyclone_input} -o ${patient}.pyclone.h5 -c 40 -d beta-binomial -r 10
+    echo "Run pyclone-vi write-results-file"
     pyclone-vi write-results-file -i ${patient}.pyclone.h5 -o ${patient}.pyclone.results.tsv
     """
 

@@ -12,16 +12,6 @@ workflow PYCLONE {
     ch_pyclone_input
 
     main:
-    //[patient, sample, mutect2_vcf, facets_rds]
-    //pyclone_input = ch_mutect2_out
-        //.map { ["${it[0]}_${it[1]}", it[0], it[1], it[2]] }
-        //.combine(
-            //ch_facets_out
-                //.map { ["${it[0]}_${it[1]}", it[0], it[1], it[2], it[3]] }, by: 0
-            //)
-        //.map{ it.unique() }
-        //.map { [it[1], it[2], it[3], it[4]]}
-
     PREPARE_PYCLONE_INPUT(ch_pyclone_input, params.conipher_prefix)
 
     MERGE_PYCLONE_INPUT_PER_PATIENT(
@@ -39,9 +29,8 @@ workflow PYCLONE {
         .map { [it[0], it[1], it[2], it[3], it[4].unique(), it[5]]}
 
     COLLATE_MUTATION_CN_DATA(pairtree_input_prep)
-    //PREPARE_PAIRTREE_INPUT(COLLATE_MUTATION_CN_DATA.out.combined_mutation_seg_data)
-
-    //RUN_PAIRTREE(PREPARE_PAIRTREE_INPUT.out.pairtree_input_files)
+    PREPARE_PAIRTREE_INPUT(COLLATE_MUTATION_CN_DATA.out.combined_mutation_seg_data)
+    RUN_PAIRTREE(PREPARE_PAIRTREE_INPUT.out.pairtree_input_files)
 
     //MERGE_CONIPHER_INPUT_PER_PATIENT(
         //PREPARE_PYCLONE_INPUT.out.conipher_input_per_sample
