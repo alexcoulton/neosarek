@@ -6,17 +6,25 @@ process PREPARE_PYCLONE_INPUT {
     publishDir "${params.outputdir}/${patient}/pyclone/", mode: params.publish_dir_mode, overwrite: params.publish_dir_overwrite
 
     output:
-    tuple val(patient), val(sample), path("${patient}.${sample}.pyclone.input.tsv"), emit: pyclone_input_per_sample
+    tuple val(patient), val(sample), env(PURITY), path("${patient}.${sample}.pyclone.input.tsv"), emit: pyclone_input_per_sample
     tuple val(patient), val(sample), path("${patient}.${sample}.conipher.input.tsv"), emit: conipher_input_per_sample
 
     script:
     """
+    echo ""
+    echo ""
+    echo ""
+    echo ""
+    echo ""
+    echo ""
     /nemo/project/proj-tracerX/working/CMELA/alex/work/cpi.nextflow/pipelines/mela/bin/parse.mut.cn.for.pyclone.R \
         ${patient} \
         ${sample} \
         ${mutect2_vcf} \
         ${facets_output} \
         ${conipher_prefix}
+
+    PURITY=`cat "${patient}.${sample}.purity.txt"`
     """
 }
 
@@ -56,14 +64,14 @@ process MERGE_CONIPHER_INPUT_PER_PATIENT {
     """
 }
 
-process RUN_PYCLONE {
+process RUN_PYCLONEVI {
     input:
     tuple val(patient), path(pyclone_input)
 
-    publishDir "${params.outputdir}/${patient}/pyclone/", mode: params.publish_dir_mode, overwrite: params.publish_dir_overwrite
+    publishDir "${params.outputdir}/${patient}/pyclonevi/", mode: params.publish_dir_mode, overwrite: params.publish_dir_overwrite
 
     output:
-    tuple val(patient), path("${patient}.pyclone.results.tsv"), emit: pyclone_results
+    tuple val(patient), path("${patient}.pyclonevi.results.tsv"), emit: pyclonevi_results
 
     script:
     """
@@ -76,7 +84,63 @@ process RUN_PYCLONE {
 
     stub:
     """
-    ln -sf ${params.stub_data_dir}/${patient}/pyclone/* ./
+    ln -sf ${params.stub_data_dir}/${patient}/pyclonevi/* ./
+    """
+}
+
+process RUN_PYCLONE {
+    debug true
+    input:
+    tuple val(patient), val(samples), val(purities), path(sample_tsvs)
+
+    publishDir "${params.outputdir}/${patient}/pyclone/", mode: params.publish_dir_mode, overwrite: params.publish_dir_overwrite
+
+    output:
+    tuple val(patient), path("${patient}.pyclone.results.tsv"), emit: pyclonevi_results
+
+    script:
+    def purity_list = purities.join(' ') //convert to space delimited list
+    def sample_list = samples.join(' ')
+    """
+    #mkdir ./numba_cache
+    #export NUMBA_CACHE_DIR=./numba_cache
+
+    echo "PyClone binary:"
+    echo \$(which PyClone)
+
+    echo "PyClone setup_analysis"
+    PyClone setup_analysis \
+        --working_dir ./pyclone_output \
+        --in_files ${sample_tsvs} \
+        --tumour_contents ${purity_list} \
+        --samples ${sample_list}
+
+
+
+    echo "PyClone run_analysis"
+    /nemo/project/proj-tracerX/working/CMELA/alex/anaconda_nemo/envs/pyclone_custom2/bin/python \
+        -m trace \
+        --trace /nemo/project/proj-tracerX/working/CMELA/alex/anaconda_nemo/envs/pyclone_custom2/bin/PyClone \
+        run_analysis \
+        --config_file ./pyclone_output/config.yaml
+
+
+
+
+    #PyClone run_analysis \
+    #    --config_file ./pyclone_output/config.yaml
+
+
+    #PyClone run_analysis_pipeline \
+    #    --working_dir ./pyclone_output \
+    #    --in_files ${sample_tsvs} \
+    #    --tumour_contents ${purity_list} \
+    #    --samples ${sample_list} &> pyclone.log
+    """
+
+    stub:
+    """
+    ln -sf ${params.stub_data_dir}/${patient}/pyclonevi/* ./
     """
 }
 

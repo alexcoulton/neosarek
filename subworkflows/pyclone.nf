@@ -14,23 +14,29 @@ workflow PYCLONE {
     main:
     PREPARE_PYCLONE_INPUT(ch_pyclone_input, params.conipher_prefix)
 
-    MERGE_PYCLONE_INPUT_PER_PATIENT(
-        PREPARE_PYCLONE_INPUT.out.pyclone_input_per_sample
-            .groupTuple()
-    )
-
-    RUN_PYCLONE(MERGE_PYCLONE_INPUT_PER_PATIENT.out.merged_pyclone_input)
-
-    pairtree_input_prep = ch_pyclone_input
+    pyclone_input = PREPARE_PYCLONE_INPUT.out.pyclone_input_per_sample
+        .filter { it[2] != 'NA' } // REMOVE SAMPLES WITH NA PURITY
         .groupTuple()
 
-    pairtree_input_prep = pairtree_input_prep
-        .combine(RUN_PYCLONE.out.pyclone_results, by: 0)
-        .map { [it[0], it[1], it[2], it[3], it[4].unique(), it[5]]}
+    RUN_PYCLONE(pyclone_input)
 
-    COLLATE_MUTATION_CN_DATA(pairtree_input_prep)
-    PREPARE_PAIRTREE_INPUT(COLLATE_MUTATION_CN_DATA.out.combined_mutation_seg_data)
-    RUN_PAIRTREE(PREPARE_PAIRTREE_INPUT.out.pairtree_input_files)
+    //MERGE_PYCLONE_INPUT_PER_PATIENT(
+        //PREPARE_PYCLONE_INPUT.out.pyclone_input_per_sample
+            //.groupTuple()
+    //)
+
+    //RUN_PYCLONE(MERGE_PYCLONE_INPUT_PER_PATIENT.out.merged_pyclone_input)
+
+    //pairtree_input_prep = ch_pyclone_input
+        //.groupTuple()
+
+    //pairtree_input_prep = pairtree_input_prep
+        //.combine(RUN_PYCLONE.out.pyclone_results, by: 0)
+        //.map { [it[0], it[1], it[2], it[3], it[4].unique(), it[5]]}
+
+    //COLLATE_MUTATION_CN_DATA(pairtree_input_prep)
+    //PREPARE_PAIRTREE_INPUT(COLLATE_MUTATION_CN_DATA.out.combined_mutation_seg_data)
+    //RUN_PAIRTREE(PREPARE_PAIRTREE_INPUT.out.pairtree_input_files)
 
     //MERGE_CONIPHER_INPUT_PER_PATIENT(
         //PREPARE_PYCLONE_INPUT.out.conipher_input_per_sample

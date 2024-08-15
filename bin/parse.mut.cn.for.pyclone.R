@@ -73,6 +73,10 @@ mutect2.vcf = mutect2.vcf[!(is.na(mutect2.vcf$minor_cn) | is.na(mutect2.vcf$majo
 ## Blanks
 mutect2.vcf = mutect2.vcf[!(mutect2.vcf$major_cn == "" & mutect2.vcf$minor_cn == ""), ]
 
+#remove indels for pyclone
+#think pyclone only deals with SNPs?
+mutect2.vcf = mutect2.vcf[!(nchar(mutect2.vcf$REF) > 1 | nchar(mutect2.vcf$ALT) > 1), ]
+
 mutation.id = with(mutect2.vcf, paste(CHROM, POS, REF, ALT, sep = '_'))
 
 x = mutect2.vcf[[paste0(patient.name, '_', sample.name)]]
@@ -120,16 +124,27 @@ write.table(
 #PYCLONE INPUT 
 ############################
 
+#pyclonevi.input = data.frame(
+    #mutation_id = mutation.id,
+    #sample_id = sample.name,
+    #ref_counts = refn,
+    #alt_counts = altn,
+    #major_cn = mutect2.vcf$major_cn,
+    #minor_cn = mutect2.vcf$minor_cn,
+    #normal_cn = 2,
+    #tumour_content = purity
+#)
+
 pyclone.input = data.frame(
     mutation_id = mutation.id,
-    sample_id = sample.name,
     ref_counts = refn,
-    alt_counts = altn,
-    major_cn = mutect2.vcf$major_cn,
-    minor_cn = mutect2.vcf$minor_cn,
+    var_counts = altn,
     normal_cn = 2,
-    tumour_content = purity
+    minor_cn = mutect2.vcf$minor_cn,
+    major_cn = mutect2.vcf$major_cn
 )
+
+pyclone.input = pyclone.input[pyclone.input$major_cn != 0, ]
 
 which(duplicated(pyclone.input))
 pyclone.input = pyclone.input[!duplicated(paste0(pyclone.input$mutation_id, '_', pyclone.input$sample_id)), ]
@@ -141,3 +156,5 @@ write.table(
     row.names = F,
     sep = '\t'
 )
+
+writeLines(as.character(purity), paste0(patient.name, '.', sample.name, '.purity.txt'))
