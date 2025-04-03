@@ -1,5 +1,9 @@
 # NeoSarek
 
+<p align="center">
+  <img src="img/neosareklogo.png" alt="NeoSarek Logo" width="400"/>
+</p>
+
 A Nextflow pipeline designed for use subsequent to the nf-core Sarek pipeline
 that performs multi-sample / multi-regional mutation calling (Mutect2), copy
 number calling (Facets), HLA-typing (HLA-HD), Neoantigen calling (pVACseq), and
