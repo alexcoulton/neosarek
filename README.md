@@ -160,3 +160,10 @@ can be run.
 # Process documentation
 
 For more detailed documentation of subworkflows and processes, see `doc/processes.md`
+
+## Authorship and Citation
+
+This pipeline was developed by Alex Coulton.  
+If you use this in your work, please cite the GitHub repository:  
+[Alex Coulton. neosarek. GitHub (2025)](https://github.com/alexcoulton/neosarek)
+
