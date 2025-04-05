@@ -110,6 +110,11 @@ Columns are `patient`, `sex`, `status`, `sample`, `ffpe`, `lane`, `fastq_1`,
 `fastq_2`.
 
 
+# Docker images
+
+Associated Docker images for the pipeline are available on Docker Hub at https://hub.docker.com/repositories/acoulton92
+
+
 # Multi-regional mutation calling process:
 
 NeoSarek was designed with the Melanoma PEACE cohort in mind, where there are
